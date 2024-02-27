@@ -28,3 +28,18 @@ def get_parent_child_with_attributes(tm1_server, dimension_name, parent_attr, ch
   return df
 
 # Example usage (same as previous example)
+# Example usage
+server_address = "your_tm1_server_address"
+server_port = 12345
+username = "your_username"
+password = "your_password"
+
+with TM1Service(address=server_address, port=server_port, user=username, password=password) as tm1:
+  # Replace with your desired dimension name, parent attribute, and child attribute
+  dimension_name = "Products"
+  parent_attr = "Color"
+  child_attr = "Category"
+
+  df = get_parent_child_with_attributes(tm1, dimension_name, parent_attr, child_attr)
+
+  print(df)
