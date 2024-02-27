@@ -1,0 +1,16 @@
+dimension_name = "your_dimension_name"
+hierarchy_name = "your_hierarchy_name"
+
+mdx = f"""
+SELECT 
+  {dimension_name}.{hierarchy_name}.[Level].Name AS Parent,
+  {dimension_name}.{hierarchy_name}.[Level].Properties('Attribute') AS AttributeOfParent,
+  {dimension_name}.{hierarchy_name}.[Member].Name AS Child,
+  {dimension_name}.{hierarchy_name}.[Member].Properties('Attribute') AS AttributeOfChild
+FROM 
+  {dimension_name}.{hierarchy_name}
+WHERE 
+  {dimension_name}.{hierarchy_name}.[Member].ISDESCENDANT(
+    {dimension_name}.{hierarchy_name}.[Level].(ALL)
+  )
+"""
