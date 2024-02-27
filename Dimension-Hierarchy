@@ -1,0 +1,45 @@
+import pandas as pd
+from TM1py.Services import TM1Service
+
+def get_dimension_hierarchy(tm1, dimension_name, parent_attribute, child_attribute):
+    # Get hierarchy from TM1
+    hierarchy = tm1.dimensions.hierarchies.get(dimension_name, dimension_name)
+
+    # Get elements with attributes
+    elements = tm1.dimensions.elements.get_all_with_attributes(dimension_name, [parent_attribute, child_attribute])
+
+    # Create a DataFrame to store the parent-child relations
+    df = pd.DataFrame(columns=['Parent', f'Attribute of {parent_attribute}', 'Child', f'Attribute of {child_attribute}'])
+
+    # Populate DataFrame with parent-child relations
+    for element in elements:
+        parent = element.get('UniqueName')
+        parent_attr = element.get('Attributes')[parent_attribute]['Value']
+
+        for child in hierarchy.get_children(element):
+            child_name = child.get('UniqueName')
+            child_attr = child.get('Attributes')[child_attribute]['Value']
+
+            df = df.append({
+                'Parent': parent,
+                f'Attribute of {parent_attribute}': parent_attr,
+                'Child': child_name,
+                f'Attribute of {child_attribute}': child_attr
+            }, ignore_index=True)
+
+    return df
+
+# Replace with your TM1 server connection details
+tm1 = TM1Service(address='your_tm1_server_address', port='your_tm1_server_port',
+                 user='your_username', password='your_password', ssl=True)
+
+# Replace with your dimension name and attribute names
+dimension_name = 'YourDimension'
+parent_attribute = 'ParentAttribute'
+child_attribute = 'ChildAttribute'
+
+# Get parent-child relation DataFrame
+df_relation = get_dimension_hierarchy(tm1, dimension_name, parent_attribute, child_attribute)
+
+# Print the DataFrame
+print(df_relation)
