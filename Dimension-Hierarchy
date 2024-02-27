@@ -3,10 +3,10 @@ from TM1py.Services import TM1Service
 
 def get_dimension_hierarchy(tm1, dimension_name, parent_attribute, child_attribute):
     # Get hierarchy from TM1
-    hierarchy = tm1.dimensions.hierarchies.get(dimension_name, dimension_name)
+    hierarchy = tm1.dimensions.get_hierarchy(dimension_name, dimension_name)
 
     # Get elements with attributes
-    elements = tm1.dimensions.elements.get_all_with_attributes(dimension_name, [parent_attribute, child_attribute])
+    elements = tm1.dimensions.get_elements_with_attributes(dimension_name, [parent_attribute, child_attribute])
 
     # Create a DataFrame to store the parent-child relations
     df = pd.DataFrame(columns=['Parent', f'Attribute of {parent_attribute}', 'Child', f'Attribute of {child_attribute}'])
@@ -16,8 +16,8 @@ def get_dimension_hierarchy(tm1, dimension_name, parent_attribute, child_attribu
         parent = element.get('UniqueName')
         parent_attr = element.get('Attributes')[parent_attribute]['Value']
 
-        for child in hierarchy.get_children(element):
-            child_name = child.get('UniqueName')
+        for child in hierarchy.get_element_children(element):
+            child_name = child.get('Name')
             child_attr = child.get('Attributes')[child_attribute]['Value']
 
             df = df.append({
