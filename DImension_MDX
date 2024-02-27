@@ -8,21 +8,25 @@ def get_parent_child_with_attributes(tm1_server, dimension_name, parent_attr, ch
   Args:
       tm1_server: TM1 Service object.
       dimension_name: Name of the dimension.
-      parent_attr: Attribute of the parent element.
+      parent_attr: Attribute of the parent element (optional).
       child_attr: Attribute of the child element.
 
   Returns:
-      pandas.DataFrame: Dataframe containing parent, parent_attr, child, and child_attr.
+      pandas.DataFrame: Dataframe containing parent (if applicable), parent_attr, child, and child_attr.
   """
   # Get all elements with attributes in a single call
   elements_df = pd.DataFrame(tm1_server.elements.get_elements_dataframe(
-      dimension_name=dimension_name, attributes=[parent_attr, child_attr]))
+      dimension_name=dimension_name, attributes=[child_attr]))
 
-  # Handle missing parents
-  elements_df["Parent"] = elements_df["Parent"].apply(lambda p: p.name if p else None)
+  # Check if parent attribute is provided
+  if parent_attr:
+    # Add a "Parent" column with potential missing values (NaN)
+    elements_df["Parent"] = elements_df["Parent"].apply(lambda p: p.name if p else pd.NA)
+    # Fill missing values with None for consistency
+    elements_df["Parent"].fillna(None, inplace=True)
 
   # Select relevant columns and rename for clarity
-  df = elements_df[["Parent", parent_attr, "Name", child_attr]]
+  df = elements_df[["Parent", parent_attr if parent_attr else None, "Name", child_attr]]
   df.rename(columns={"Name": "Child"}, inplace=True)
 
   return df
