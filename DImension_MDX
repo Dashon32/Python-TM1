@@ -1,25 +1,30 @@
-from TM1py import TM1Service
-from collections import defaultdict
+from TM1py.Services import TM1Service
+import pandas as pd
 
-with TM1Service(address="your_tm1_server", user="username", password="password") as tm1:
-    # Replace with your TM1 server details
-    # ...
+def get_parent_child_with_attributes(tm1_server, dimension_name, parent_attr, child_attr):
+  """
+  Retrieves parent-child relationships with user-specified attributes for a dimension.
 
-    dimension_name = "your_dimension_name"
-    hierarchy_name = "your_hierarchy_name"
+  Args:
+      tm1_server: TM1 Service object.
+      dimension_name: Name of the dimension.
+      parent_attr: Attribute of the parent element.
+      child_attr: Attribute of the child element.
 
-    hierarchy = tm1.dimensions.hierarchies.get(dimension_name, hierarchy_name)
+  Returns:
+      pandas.DataFrame: Dataframe containing parent, parent_attr, child, and child_attr.
+  """
+  # Get all elements and their attributes in a single call
+  elements_df = pd.DataFrame(tm1_server.dimensions.elements.get_all_with_attributes(
+      dimension_name, attributes=[parent_attr, child_attr]))
 
-    parent_child_data = defaultdict(list)
+  # Handle missing parents
+  elements_df["Parent"] = elements_df["Parent"].apply(lambda p: p.name if p else None)
 
-    for (parent, child), weight in hierarchy.edges.items():
-        parent_child_data[parent.name].append(child.name)
+  # Select relevant columns and rename for clarity
+  df = elements_df[["Parent", parent_attr, "Name", child_attr]]
+  df.rename(columns={"Name": "Child"}, inplace=True)
 
-    data = []
-    for parent, children in parent_child_data.items():
-        for child in children:
-            data.append({"Parent": parent, "Attribute of Parent": None, "Child": child, "Attribute of Child": None})
+  return df
 
-    df = pd.DataFrame(data)
-
-# Use the DataFrame 'df' for further analysis
+# Example usage (same as previous example)
