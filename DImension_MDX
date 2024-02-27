@@ -1,16 +1,25 @@
-dimension_name = "your_dimension_name"
-hierarchy_name = "your_hierarchy_name"
+from TM1py import TM1Service
+from collections import defaultdict
 
-mdx = f"""
-SELECT 
-  {dimension_name}.{hierarchy_name}.[Level].Name AS Parent,
-  {dimension_name}.{hierarchy_name}.[Level].Properties('Attribute') AS AttributeOfParent,
-  {dimension_name}.{hierarchy_name}.[Member].Name AS Child,
-  {dimension_name}.{hierarchy_name}.[Member].Properties('Attribute') AS AttributeOfChild
-FROM 
-  {dimension_name}.{hierarchy_name}
-WHERE 
-  {dimension_name}.{hierarchy_name}.[Member].ISDESCENDANT(
-    {dimension_name}.{hierarchy_name}.[Level].(ALL)
-  )
-"""
+with TM1Service(address="your_tm1_server", user="username", password="password") as tm1:
+    # Replace with your TM1 server details
+    # ...
+
+    dimension_name = "your_dimension_name"
+    hierarchy_name = "your_hierarchy_name"
+
+    hierarchy = tm1.dimensions.hierarchies.get(dimension_name, hierarchy_name)
+
+    parent_child_data = defaultdict(list)
+
+    for (parent, child), weight in hierarchy.edges.items():
+        parent_child_data[parent.name].append(child.name)
+
+    data = []
+    for parent, children in parent_child_data.items():
+        for child in children:
+            data.append({"Parent": parent, "Attribute of Parent": None, "Child": child, "Attribute of Child": None})
+
+    df = pd.DataFrame(data)
+
+# Use the DataFrame 'df' for further analysis
