@@ -1,4 +1,4 @@
-from TM1py.Services import TM1Service
+from TM1py.Services import ElementService, TM1Service
 import pandas as pd
 
 def get_parent_child_with_attributes(tm1_server, dimension_name, parent_attr, child_attr):
@@ -14,9 +14,9 @@ def get_parent_child_with_attributes(tm1_server, dimension_name, parent_attr, ch
   Returns:
       pandas.DataFrame: Dataframe containing parent, parent_attr, child, and child_attr.
   """
-  # Get all elements and their attributes in a single call
-  elements_df = pd.DataFrame(tm1_server.dimensions.elements.get_all_with_attributes(
-      dimension_name, attributes=[parent_attr, child_attr]))
+  # Get all elements with attributes in a single call
+  elements_df = pd.DataFrame(tm1_server.elements.get_elements_dataframe(
+      dimension_name=dimension_name, attributes=[parent_attr, child_attr]))
 
   # Handle missing parents
   elements_df["Parent"] = elements_df["Parent"].apply(lambda p: p.name if p else None)
