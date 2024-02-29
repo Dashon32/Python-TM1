@@ -4,18 +4,14 @@ import pandas as pd
 data = {'A': [1, 2, 3], 'B': [4, 5, 6], 'C': [7, 8, 9], 'A': [10, 11, 12]}
 df = pd.DataFrame(data)
 
-# Function to rename duplicate columns
+# Function to rename duplicate columns efficiently
 def rename_duplicate_columns(df):
-    seen = set()
-    cols = []
-    for col in df.columns:
-        cols.append(col if col not in seen else col + '_1')
-        seen.add(col)
-    df.columns = cols
+    cols = pd.Series(df.columns)
+    cols_adj = cols.groupby(cols).cumcount().astype(str).replace('0', '').radd('_')
+    df.columns = cols + cols_adj
     return df
 
 # Rename duplicate columns
 df = rename_duplicate_columns(df)
 
 print(df)
-
