@@ -1,49 +1,44 @@
 from TM1py.Services import TM1Service
-from TM1py.Utils.Utils import build_element_unique_names, CaseAndSpaceInsensitiveSet
-import pandas as pd
 
-def get_hierarchy_for_elements_in_mdx(mdx_query):
-    # Connect to TM1 server
-    tm1 = TM1Service(address="tm1_server_address", port="tm1_port", user="username", password="password")
+def get_parents_to_top_level(tm1, dimension_name, hierarchy_name, element_name):
+    # Initialize list to store parent elements
+    parents = []
 
-    # Extract element names from MDX query
-    element_names = [element.replace("[", "").replace("]", "") for element in mdx_query.split(" ")[-1].split(",")]
+    # Recursive function to get parent of an element
+    def get_parent(element):
+        # Get the element
+        element_instance = tm1.dimensions.hierarchies.elements.get(
+            dimension_name, hierarchy_name, element)
 
-    hierarchy_data = []
+        # If the element exists
+        if element_instance:
+            parent = element_instance.parent
 
-    for name in element_names:
-        # MDX query to retrieve the tree hierarchy for a specific element
-        mdx = f"SELECT Hierarchize({{TM1FILTERBYLEVEL( {{DESCENDANTS( [YourDimension].[YourHierarchy].[{name}] )}}, 0)}}) ON ROWS FROM [YourCube]"
+            # If parent is not the top level, append it to the list and call the function recursively
+            if parent:
+                parents.append(parent.name)
+                get_parent(parent.name)
 
-        # Execute the MDX query
-        result = tm1.cubes.cells.execute_mdx(mdx)
+    # Call the recursive function
+    get_parent(element_name)
 
-        # Extract unique element names from the result
-        element_names_result = build_element_unique_names(result.raw_cellset)
+    return parents
 
-        # Get the unique levels in the hierarchy
-        levels = CaseAndSpaceInsensitiveSet([name.count('].[') for name in element_names_result])
+# Connect to TM1 server
+tm1 = TM1Service(address="tm1_server_address", port="tm1_port", user="username", password="password")
 
-        # Create dictionary to store hierarchy data for this element
-        element_hierarchy_data = {"Element": name}
+# Example parameters
+dimension_name = "YourDimension"
+hierarchy_name = "YourHierarchy"
+element_name = "YourElement"
 
-        # Store hierarchy data in dictionary
-        for level in sorted(levels):
-            level_elements = [name for name in element_names_result if name.count('].[') == level]
-            element_hierarchy_data[f"Level_{level}"] = ", ".join(level_elements)
+# Get all parents of the element up to the top level
+parents = get_parents_to_top_level(tm1, dimension_name, hierarchy_name, element_name)
 
-        hierarchy_data.append(element_hierarchy_data)
+# Disconnect from TM1 server
+tm1.logout()
 
-    # Disconnect from TM1 server
-    tm1.logout()
-
-    # Convert hierarchy data to DataFrame
-    df = pd.DataFrame(hierarchy_data)
-
-    return df
-
-# Example MDX query pointing to elements in a dimension
-mdx_query = "SELECT {[Element1], [Element2], [Element3]} ON ROWS FROM [YourCube]"
-
-# Call the function to retrieve the hierarchy for elements in the MDX query
-hierarchy_df = get_hierarchy_for_elements_in_mdx(mdx_query)
+# Print the list of parents
+print("Parents to top level:")
+for parent in reversed(parents):
+    print(parent)
