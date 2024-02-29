@@ -1,1 +1,21 @@
-df.rename(columns=lambda x: f"{x}_1" if df.columns.duplicated().any() else x, inplace=True)
+import pandas as pd
+
+# Sample DataFrame with duplicate column names
+data = {'A': [1, 2, 3], 'B': [4, 5, 6], 'C': [7, 8, 9], 'A': [10, 11, 12]}
+df = pd.DataFrame(data)
+
+# Function to rename duplicate columns
+def rename_duplicate_columns(df):
+    seen = set()
+    cols = []
+    for col in df.columns:
+        cols.append(col if col not in seen else col + '_1')
+        seen.add(col)
+    df.columns = cols
+    return df
+
+# Rename duplicate columns
+df = rename_duplicate_columns(df)
+
+print(df)
+
