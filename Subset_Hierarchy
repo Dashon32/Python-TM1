@@ -1,4 +1,11 @@
-rename_dict = {col: f"level_{i // 3 + 1}{'_' + col.split('_')[-1] if '_' in col else ''}" 
-               for i, col in enumerate(level_columns)}
+for i in range(len(column_names)):
+    # Check if the column name starts with 'level' followed by digits
+    if column_names[i].startswith('level'):
+        # Split the column name into prefix and suffix
+        prefix, suffix = column_names[i].split('_')
 
-df.rename(columns=rename_dict, inplace=True)
+        # Rename the column based on index and suffix
+        column_names[i] = f'level_{index_counter}_{suffix}'
+
+        # Increment the index counter
+        index_counter += 1
