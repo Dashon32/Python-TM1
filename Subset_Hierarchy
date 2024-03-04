@@ -1,44 +1,4 @@
-from TM1py.Services import TM1Service
+rename_dict = {col: f"level_{i // 3 + 1}{'_' + col.split('_')[-1] if '_' in col else ''}" 
+               for i, col in enumerate(level_columns)}
 
-def get_parents_to_top_level(tm1, dimension_name, hierarchy_name, element_name):
-    # Initialize list to store parent elements
-    parents = []
-
-    # Recursive function to get parent of an element
-    def get_parent(element):
-        # Get the element
-        element_instance = tm1.dimensions.hierarchies.elements.get(
-            dimension_name, hierarchy_name, element)
-
-        # If the element exists
-        if element_instance:
-            parent = element_instance.parent
-
-            # If parent is not the top level, append it to the list and call the function recursively
-            if parent:
-                parents.append(parent.name)
-                get_parent(parent.name)
-
-    # Call the recursive function
-    get_parent(element_name)
-
-    return parents
-
-# Connect to TM1 server
-tm1 = TM1Service(address="tm1_server_address", port="tm1_port", user="username", password="password")
-
-# Example parameters
-dimension_name = "YourDimension"
-hierarchy_name = "YourHierarchy"
-element_name = "YourElement"
-
-# Get all parents of the element up to the top level
-parents = get_parents_to_top_level(tm1, dimension_name, hierarchy_name, element_name)
-
-# Disconnect from TM1 server
-tm1.logout()
-
-# Print the list of parents
-print("Parents to top level:")
-for parent in reversed(parents):
-    print(parent)
+df.rename(columns=rename_dict, inplace=True)
