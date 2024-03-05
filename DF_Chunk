@@ -1,43 +1,4 @@
-import tm1py
-import pandas as pd
+filtered_list = [item for sublist in data_list for item in sublist if item['Name'] in df['Name'].values]
 
-def get_data_by_chunks(cube_name, dimensions, chunk_dimension, chunk_size=10000):
-    """
-    Extracts TM1 data in chunks based on a specific dimension.
-
-    Args:
-        cube_name (str): Name of the TM1 cube to extract data from.
-        dimensions (list): List of TM1 cube dimensions.
-        chunk_dimension (str): The dimension to use for chunking.
-        chunk_size (int, optional): Number of cells to retrieve in each chunk. Defaults to 10000.
-
-    Returns:
-        pandas.DataFrame: The combined DataFrame containing all chunks.
-    """
-
-    data_list = []
-
-    # Get unique members of the chunk dimension
-    chunk_members = tm1.dimensions.hierarchies.get_members(cube_name, chunk_dimension)
-
-    for member in chunk_members:
-        # Filter the original MDX query based on the current chunk member
-        filtered_mdx = f"SELECT {{[Measures].[Total Sales]}} FROM {cube_name} WHERE {{ {chunk_dimension} = '{member}' }} {{1}}"
-
-        # Execute the chunked MDX query and append the DataFrame to the list
-        df = tm1.cubes.cells.execute_view_dataframe(cube_name, filtered_mdx)
-        data_list.append(df)
-
-    # Combine all chunks into a single DataFrame
-    return pd.concat(data_list, ignore_index=True)
-
-# Example usage:
-cube_name = "your_cube_name"
-dimensions = ["Year", "Quarter", "Region"]
-original_mdx = "SELECT {{[Measures].[Total Sales]}} FROM your_cube_name WHERE {{1}}"  # Replace with your original MDX query
-chunk_dimension = "Year"  # Adjust based on your query
-chunk_size = 10000  # Adjust as needed
-
-df = get_data_by_chunks(cube_name, dimensions, chunk_dimension, chunk_size)
-
-print(df.head())  # Display the first few rows
+# Extract a DataFrame with 'Name' as index and 'Weight' as the only column
+result_df = pd.DataFrame({item['Name']: item['Weight'] for item in filtered_list}, index=['Weight']).T
