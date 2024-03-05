@@ -1,32 +1,5 @@
-level_columns = [col for col in df.columns if col.startswith('level')]
-level_attributes = set('_'.join(col.split('_')[1:-1]) for col in level_columns)
-
-# Initialize lists to store parent-child relationship data
-relationships = []
-
-# Iterate over each pair of level columns
-for i in range(0, len(level_columns), 3):
-    parent_col = level_columns[i]
-    parent_attr_col = f"{parent_col.split('_')[1]}_Desc"
-    child_col = level_columns[i+1]
-    child_attr_col = f"{child_col.split('_')[1]}_Desc"
-    weight_col = level_columns[i+2]
-
-    # Construct parent-child relationships
-    relationships.extend([
-        {
-            'Parent': row[parent_col],
-            'Attribute_of_Parent': row[parent_attr_col],
-            'Child': row[child_col],
-            'Attribute_of_Child': row[child_attr_col],
-            'Weight': row[weight_col]
-        }
-        for index, row in df[[parent_col, parent_attr_col, child_col, child_attr_col, weight_col]].iterrows()
-        if not pd.isnull(row[child_col])
-    ])
-
-# Create the parent-child relationship DataFrame
-relationship_df = pd.DataFrame(relationships)
-
-print("Parent-Child Relationship DataFrame:")
-print(relationship_df)
+    if column_name in df.columns:
+        # Construct the new column name
+        new_column_name = f"level{number+1:03d}_Weight"
+        # Rename the column
+        df.rename(columns={column_name: new_column_name}, inplace=True)
