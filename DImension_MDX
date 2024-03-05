@@ -1,17 +1,38 @@
-import pandas as pd
+# Initialize lists to store parent-child relationship data
+parents = []
+attributes_of_parents = []
+children = []
+attributes_of_children = []
+weights = []
 
-# Sample DataFrame with duplicate column names
-data = {'A': [1, 2, 3], 'B': [4, 5, 6], 'C': [7, 8, 9], 'A': [10, 11, 12]}
-df = pd.DataFrame(data)
+# Iterate over each row in the DataFrame
+for index, row in df.iterrows():
+    # Iterate over level columns
+    for i in range(0, len(row), 3):
+        # Get the parent and child information
+        parent_col = f"level{i:03d}"
+        parent_attr_col = f"level{i:03d}_Desc"
+        child_col = f"level{i+1:03d}"
+        child_attr_col = f"level{i+1:03d}_Desc"
+        weight_col = f"level{i+1:03d}_Weight"
+        
+        # Check if parent and child columns exist in the row
+        if parent_col in row and child_col in row:
+            # Append parent-child relationship data to lists
+            parents.append(row[parent_col])
+            attributes_of_parents.append(row[parent_attr_col])
+            children.append(row[child_col])
+            attributes_of_children.append(row[child_attr_col])
+            weights.append(row[weight_col])
 
-# Function to rename duplicate columns efficiently
-def rename_duplicate_columns(df):
-    cols = pd.Series(df.columns)
-    cols_adj = cols.groupby(cols).cumcount().astype(str).replace('0', '').radd('_')
-    df.columns = cols + cols_adj
-    return df
+# Create the parent-child relationship DataFrame
+relationship_df = pd.DataFrame({
+    'Parent': parents,
+    'Attribute_of_Parent': attributes_of_parents,
+    'Child': children,
+    'Attribute_of_Child': attributes_of_children,
+    'Weight': weights
+})
 
-# Rename duplicate columns
-df = rename_duplicate_columns(df)
-
-print(df)
+print("Parent-Child Relationship DataFrame:")
+print(relationship_df)
