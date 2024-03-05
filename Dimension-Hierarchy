@@ -1,45 +1,54 @@
 import pandas as pd
-from TM1py.Services import TM1Service
 
-def get_dimension_hierarchy(tm1, dimension_name, parent_attribute, child_attribute):
-    # Get hierarchy from TM1
-    hierarchy = tm1.dimensions.get_hierarchy(dimension_name, dimension_name)
+# Example DataFrame
+data = {
+    'version': [1, 1, 2],
+    'dimension': ['A', 'B', 'C'],
+    'level000': ['Parent1', 'Parent2', 'Parent3'],
+    'level000_Desc': ['Desc1', 'Desc2', 'Desc3'],
+    'level000_Weight': [10, 20, 30],
+    'level_1': ['Child1', 'Child2', 'Child3'],
+    'level_1_Desc': ['Child Desc1', 'Child Desc2', 'Child Desc3'],
+    'level_1_Weight': [5, 15, 25]
+}
+df = pd.DataFrame(data)
 
-    # Get elements with attributes
-    elements = tm1.dimensions.get_elements_with_attributes(dimension_name, [parent_attribute, child_attribute])
+# Get all columns starting with 'level'
+level_cols = [col for col in df.columns if col.startswith('level')]
 
-    # Create a DataFrame to store the parent-child relations
-    df = pd.DataFrame(columns=['Parent', f'Attribute of {parent_attribute}', 'Child', f'Attribute of {child_attribute}'])
+# Initialize lists to store parent-child relationship data
+parents = []
+attributes_of_parents = []
+children = []
+attributes_of_children = []
+weights = []
 
-    # Populate DataFrame with parent-child relations
-    for element in elements:
-        parent = element.get('UniqueName')
-        parent_attr = element.get('Attributes')[parent_attribute]['Value']
+# Iterate over each pair of level columns
+for i in range(0, len(level_cols), 2):
+    # Get column names for the pair of level columns
+    parent_col = level_cols[i]
+    child_col = level_cols[i+1]
+    attr_col = f"{parent_col}_Desc"
+    weight_col = f"{parent_col}_Weight"
+    
+    # Extract parent-child relationship data
+    relationship_data = df[[parent_col, attr_col, child_col, weight_col]].dropna(how='any')
 
-        for child in hierarchy.get_element_children(element):
-            child_name = child.get('Name')
-            child_attr = child.get('Attributes')[child_attribute]['Value']
+    # Append relationship data to lists
+    parents.extend(relationship_data[parent_col])
+    attributes_of_parents.extend(relationship_data[attr_col])
+    children.extend(relationship_data[child_col])
+    attributes_of_children.extend(relationship_data[child_col + '_Desc'])
+    weights.extend(relationship_data[child_col + '_Weight'])
 
-            df = df.append({
-                'Parent': parent,
-                f'Attribute of {parent_attribute}': parent_attr,
-                'Child': child_name,
-                f'Attribute of {child_attribute}': child_attr
-            }, ignore_index=True)
+# Create the parent-child relationship DataFrame
+relationship_df = pd.DataFrame({
+    'Parent': parents,
+    'Attribute_of_Parent': attributes_of_parents,
+    'Child': children,
+    'Attribute_of_Child': attributes_of_children,
+    'Weight': weights
+})
 
-    return df
-
-# Replace with your TM1 server connection details
-tm1 = TM1Service(address='your_tm1_server_address', port='your_tm1_server_port',
-                 user='your_username', password='your_password', ssl=True)
-
-# Replace with your dimension name and attribute names
-dimension_name = 'YourDimension'
-parent_attribute = 'ParentAttribute'
-child_attribute = 'ChildAttribute'
-
-# Get parent-child relation DataFrame
-df_relation = get_dimension_hierarchy(tm1, dimension_name, parent_attribute, child_attribute)
-
-# Print the DataFrame
-print(df_relation)
+print("Parent-Child Relationship DataFrame:")
+print(relationship_df)
