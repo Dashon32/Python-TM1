@@ -1,38 +1,32 @@
-# Initialize lists to store parent-child relationship data
-parents = []
-attributes_of_parents = []
-children = []
-attributes_of_children = []
-weights = []
+level_columns = [col for col in df.columns if col.startswith('level')]
+level_attributes = set('_'.join(col.split('_')[1:-1]) for col in level_columns)
 
-# Iterate over each row in the DataFrame
-for index, row in df.iterrows():
-    # Iterate over level columns
-    for i in range(0, len(row), 3):
-        # Get the parent and child information
-        parent_col = f"level{i:03d}"
-        parent_attr_col = f"level{i:03d}_Desc"
-        child_col = f"level{i+1:03d}"
-        child_attr_col = f"level{i+1:03d}_Desc"
-        weight_col = f"level{i+1:03d}_Weight"
-        
-        # Check if parent and child columns exist in the row
-        if parent_col in row and child_col in row:
-            # Append parent-child relationship data to lists
-            parents.append(row[parent_col])
-            attributes_of_parents.append(row[parent_attr_col])
-            children.append(row[child_col])
-            attributes_of_children.append(row[child_attr_col])
-            weights.append(row[weight_col])
+# Initialize lists to store parent-child relationship data
+relationships = []
+
+# Iterate over each pair of level columns
+for i in range(0, len(level_columns), 3):
+    parent_col = level_columns[i]
+    parent_attr_col = f"{parent_col.split('_')[1]}_Desc"
+    child_col = level_columns[i+1]
+    child_attr_col = f"{child_col.split('_')[1]}_Desc"
+    weight_col = level_columns[i+2]
+
+    # Construct parent-child relationships
+    relationships.extend([
+        {
+            'Parent': row[parent_col],
+            'Attribute_of_Parent': row[parent_attr_col],
+            'Child': row[child_col],
+            'Attribute_of_Child': row[child_attr_col],
+            'Weight': row[weight_col]
+        }
+        for index, row in df[[parent_col, parent_attr_col, child_col, child_attr_col, weight_col]].iterrows()
+        if not pd.isnull(row[child_col])
+    ])
 
 # Create the parent-child relationship DataFrame
-relationship_df = pd.DataFrame({
-    'Parent': parents,
-    'Attribute_of_Parent': attributes_of_parents,
-    'Child': children,
-    'Attribute_of_Child': attributes_of_children,
-    'Weight': weights
-})
+relationship_df = pd.DataFrame(relationships)
 
 print("Parent-Child Relationship DataFrame:")
 print(relationship_df)
