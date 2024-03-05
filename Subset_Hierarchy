@@ -1,11 +1,22 @@
-for i in range(len(column_names)):
-    # Check if the column name starts with 'level' followed by digits
-    if column_names[i].startswith('level'):
-        # Split the column name into prefix and suffix
-        prefix, suffix = column_names[i].split('_')
+import pandas as pd
 
-        # Rename the column based on index and suffix
-        column_names[i] = f'level_{index_counter}_{suffix}'
+# Example DataFrame
+data = {
+    'level000': [1, 2, 3],
+    'level001': [4, 5, 6],
+    'level002': [7, 8, 9],
+    'numbers': [5, 6, 9],
+    'values': ['A', 'B', 'C']
+}
+df = pd.DataFrame(data)
 
-        # Increment the index counter
-        index_counter += 1
+# Iterate over each row in the DataFrame
+for index, row in df.iterrows():
+    # Get the number from the 'numbers' column
+    number = row['numbers']
+    # Construct the column name based on the number
+    column_name = f"level{number:03d}"
+    # Assign the value from the 'values' column to the dynamically constructed column
+    df.at[index, column_name] = row['values']
+
+print(df)
