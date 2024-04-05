@@ -1,31 +1,17 @@
 def split_list_and_create_strings(input_list, num_lists, dimension):
-    # Function to split the input list into n lists
-    def split_list_into_n_lists(input_list, num_lists):
-        items_per_list = len(input_list) // num_lists
-        remainder = len(input_list) % num_lists
-        extra_lists = remainder
-        start_idx = 0
-        lists = [[] for _ in range(num_lists)]
-        for _ in range(num_lists - extra_lists):
-            lists.append(input_list[start_idx:start_idx + items_per_list])
-            start_idx += items_per_list
-        for _ in range(num_lists - extra_lists, num_lists):
-            lists[-1].append(input_list[start_idx])
-            start_idx += 1
-        return lists
+    # Initialize the lists
+    lists = [[] for _ in range(num_lists)]
 
-    # Function to create strings for each list
-    def create_strings_for_lists(lists, dimension):
-        strings = []
-        for lst in lists:
-            string = ', '.join([f"[{dimension}].[{dimension}].[{item}]" for item in lst])
-            strings.append(f"({string})")
-        return strings
+    # Distribute elements round-robin
+    for i, item in enumerate(input_list):
+        lists[i % num_lists].append(item)
 
-    # Split input list into n lists
-    lists = split_list_into_n_lists(input_list, num_lists)
     # Create strings for each list
-    strings = create_strings_for_lists(lists, dimension)
+    strings = []
+    for lst in lists:
+        string = ', '.join([f"[{dimension}].[{dimension}].[{item}]" for item in lst])
+        strings.append(f"({string})")
+
     return strings
 
 # Example usage
