@@ -1,3 +1,19 @@
+def split_list_and_create_strings(input_list, num_lists, dimension):
+    # Initialize the lists
+    lists = [[] for _ in range(num_lists)]
+
+    # Distribute elements round-robin
+    for i, item in enumerate(input_list):
+        lists[i % num_lists].append(item)
+
+    # Create strings for each list
+    strings_lists = []
+    for lst in lists:
+        strings = [f"[{dimension}].[{dimension}].[{item}]" for item in lst]
+        strings_lists.append(strings)
+
+    return strings_lists
+
 def generate_mdx_queries(df, split_dimension, splitted_strings=None):
     df_table_dim = df[df['order'] == 0].sort_values('order', ascending=True)
     df_table_dim = df_table_dim['MDX'].tolist()
@@ -36,7 +52,15 @@ def generate_mdx_queries(df, split_dimension, splitted_strings=None):
 # Example usage
 df = ...  # Your DataFrame containing configuration data
 split_dimension = 1  # 1 to split dimension, 0 to keep as is
-splitted_strings = ["[Function].[Function].[1]", "[Function].[Function].[2]", "[Function].[Function].[3]", "[Function].[Function].[4]"]
+input_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+num_lists = 4
+dimension = "Function"
+
+if split_dimension == 1:
+    splitted_strings = split_list_and_create_strings(input_list, num_lists, dimension)
+else:
+    splitted_strings = None
+
 mdx_queries = generate_mdx_queries(df, split_dimension, splitted_strings)
 for i, mdx_query in enumerate(mdx_queries):
     print(f"MDX Query {i+1}: {mdx_query}")
