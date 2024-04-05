@@ -7,18 +7,18 @@ def split_list_and_create_strings(input_list, num_lists, dimension):
         lists[i % num_lists].append(item)
 
     # Create strings for each list
-    strings = []
+    strings_lists = []
     for lst in lists:
-        string = ', '.join([f"[{dimension}].[{dimension}].[{item}]" for item in lst])
-        strings.append(f"({string})")
+        strings = [f"[{dimension}].[{dimension}].[{item}]" for item in lst]
+        strings_lists.append(', '.join(strings))
 
-    return strings
+    return strings_lists
 
 # Example usage
 input_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
 num_lists = 4
 dimension = "Function"
 
-strings = split_list_and_create_strings(input_list, num_lists, dimension)
-for i, string in enumerate(strings):
-    print(f"String {i+1}: {string}")
+result_strings = split_list_and_create_strings(input_list, num_lists, dimension)
+for i, result_string in enumerate(result_strings):
+    print(f"String {i+1}: {result_string}")
