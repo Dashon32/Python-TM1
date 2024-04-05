@@ -1,26 +1,10 @@
 def split_list_into_n_lists(input_list, num_lists):
-    # Calculate the number of items per list and the remainder
-    items_per_list = len(input_list) // num_lists
-    remainder = len(input_list) % num_lists
+    # Initialize the lists
+    lists = [[] for _ in range(num_lists)]
 
-    # Calculate the number of lists that will have one extra item
-    extra_lists = remainder
-
-    # Initialize start index for slicing
-    start_idx = 0
-
-    # Initialize the list of lists
-    lists = []
-
-    # Generate separate lists
-    for _ in range(num_lists - extra_lists):  # Create num_lists - extra_lists lists
-        lists.append(input_list[start_idx:start_idx + items_per_list])
-        start_idx += items_per_list
-
-    # Add extra items to the last few lists
-    for _ in range(num_lists - extra_lists, num_lists):
-        lists[-1].append(input_list[start_idx])
-        start_idx += 1
+    # Distribute elements round-robin
+    for i, item in enumerate(input_list):
+        lists[i % num_lists].append(item)
 
     return lists
 
