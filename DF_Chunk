@@ -1,24 +1,16 @@
-def split_list_and_create_strings(input_list, num_lists, dimension):
-    # Initialize the lists
-    lists = [[] for _ in range(num_lists)]
+def generate_mdx_query(df, multithreaded, num_strings=None):
+    def split_list_and_create_strings(input_list, num_lists, dimension):
+        lists = [[] for _ in range(num_lists)]
+        for i, item in enumerate(input_list):
+            lists[i % num_lists].append(item)
+        strings_lists = []
+        for lst in lists:
+            strings = [f"[{dimension}].[{dimension}].[{item}]" for item in lst]
+            strings_lists.append(', '.join(strings))
+        return strings_lists
 
-    # Distribute elements round-robin
-    for i, item in enumerate(input_list):
-        lists[i % num_lists].append(item)
-
-    # Create strings for each list
-    strings_lists = []
-    for lst in lists:
-        strings = [f"[{dimension}].[{dimension}].[{item}]" for item in lst]
-        strings_lists.append(strings)
-
-    return strings_lists
-
-def generate_mdx_queries(df, split_dimension, splitted_strings=None):
     df_table_dim = df[df['order'] == 0].sort_values('order', ascending=True)
     df_table_dim = df_table_dim['MDX'].tolist()
-    df_table_dim = [f'{{{subset}}}' for subset in df_table_dim]
-
     df_where = df[df['order'] == 0]
     df_where = df_where['MDX'].tolist()
 
@@ -27,11 +19,9 @@ def generate_mdx_queries(df, split_dimension, splitted_strings=None):
         emp_statement = "NON EMPTY "
     else:
         emp_statement = "*"
-    
-    properties = "DIMENSION PROPERTIES MEMBER_NAME ON"
-    select_clause = f"SELECT {emp_statement} {''.join(df_table_dim[1:])} {properties} ON 0, {emp_statement} {df_table_dim[0]} {properties} ON 1"
-    from_clause = f"FROM [{df_vdattr.loc['cube_name', 'Value']}]"
 
+    properties = "DIMENSION PROPERTIES MEMBER_NAME ON"
+    from_clause = f"FROM [{df_vdattr.loc['cube_name', 'Value']}]"
     if df_where:
         where_clause = f"WHERE ({','.join(df_where)})"
     else:
@@ -39,28 +29,20 @@ def generate_mdx_queries(df, split_dimension, splitted_strings=None):
 
     mdx_queries = []
 
-    if split_dimension == 1 and splitted_strings:
-        for splitted_string in splitted_strings:
-            mdx_query = f"({select_clause}) {from_clause} {where_clause.replace('[Dimension].[Dimension]', splitted_string)}"
+    if multithreaded == 1 and num_strings:
+        for i in range(1, num_strings + 1):
+            df_temp = df.copy()  # Create a copy of the original DataFrame
+            dimension_string = f"[Dimension{i}]"
+            strings_list = split_list_and_create_strings(df_temp['MDX'], num_strings, dimension_string)
+            df_temp.loc[df_temp['order'] == i - 1, 'MDX'] = strings_list[i - 1]
+            
+            select_clause = f"SELECT {emp_statement} {''.join(df_temp['MDX'][1:])} {properties} ON 0, {emp_statement} {df_temp['MDX'][0]} {properties} ON 1"
+            
+            mdx_query = f"({select_clause}) {from_clause} {where_clause}"
             mdx_queries.append(mdx_query)
     else:
+        select_clause = f"SELECT {emp_statement} {''.join(df_table_dim[1:])} {properties} ON 0, {emp_statement} {df_table_dim[0]} {properties} ON 1"
         mdx_query = f"({select_clause}) {from_clause} {where_clause}"
         mdx_queries.append(mdx_query)
 
-    return mdx_queries
-
-# Example usage
-df = ...  # Your DataFrame containing configuration data
-split_dimension = 1  # 1 to split dimension, 0 to keep as is
-input_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
-num_lists = 4
-dimension = "Function"
-
-if split_dimension == 1:
-    splitted_strings = split_list_and_create_strings(input_list, num_lists, dimension)
-else:
-    splitted_strings = None
-
-mdx_queries = generate_mdx_queries(df, split_dimension, splitted_strings)
-for i, mdx_query in enumerate(mdx_queries):
-    print(f"MDX Query {i+1}: {mdx_query}")
+    return mdx_queries if multithreaded == 1 else mdx_queries[0]
