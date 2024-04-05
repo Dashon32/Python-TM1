@@ -1,4 +1,33 @@
-filtered_list = [item for sublist in data_list for item in sublist if item['Name'] in df['Name'].values]
+def split_list_into_n_lists(input_list, num_lists):
+    # Calculate the number of items per list and the remainder
+    items_per_list = len(input_list) // num_lists
+    remainder = len(input_list) % num_lists
 
-# Extract a DataFrame with 'Name' as index and 'Weight' as the only column
-result_df = pd.DataFrame({item['Name']: item['Weight'] for item in filtered_list}, index=['Weight']).T
+    # Calculate the number of lists that will have one extra item
+    extra_lists = remainder
+
+    # Initialize start index for slicing
+    start_idx = 0
+
+    # Initialize the list of lists
+    lists = []
+
+    # Generate separate lists
+    for _ in range(num_lists - extra_lists):  # Create num_lists - extra_lists lists
+        lists.append(input_list[start_idx:start_idx + items_per_list])
+        start_idx += items_per_list
+
+    # Add extra items to the last few lists
+    for _ in range(num_lists - extra_lists, num_lists):
+        lists[-1].append(input_list[start_idx])
+        start_idx += 1
+
+    return lists
+
+# Example usage
+input_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+num_lists = 4
+
+lists = split_list_into_n_lists(input_list, num_lists)
+for i, lst in enumerate(lists):
+    print(f"List {i+1}: {lst}")
