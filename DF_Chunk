@@ -1,48 +1,18 @@
-def generate_mdx_query(df, multithreaded, num_strings=None):
-    def split_list_and_create_strings(input_list, num_lists, dimension):
-        lists = [[] for _ in range(num_lists)]
-        for i, item in enumerate(input_list):
-            lists[i % num_lists].append(item)
-        strings_lists = []
-        for lst in lists:
-            strings = [f"[{dimension}].[{dimension}].[{item}]" for item in lst]
-            strings_lists.append(', '.join(strings))
-        return strings_lists
+original_string = "{[A].[A].[B]}*{[C].[C].[D]}*{[E].[E].[F]}"
+parameter = "C"
+replacement_list = ["{[G].[G].[H]}", "{[I].[I].[J]}"]
 
-    df_table_dim = df[df['order'] == 0].sort_values('order', ascending=True)
-    df_table_dim = df_table_dim['MDX'].tolist()
-    df_where = df[df['order'] == 0]
-    df_where = df_where['MDX'].tolist()
+# Split the original string based on '*'
+segments = original_string.split('*')
 
-    skip_zeros_flag = df_vdattr.loc['skip_zeros_flag', 'Value']
-    if skip_zeros_flag == 0:
-        emp_statement = "NON EMPTY "
+# Iterate over segments and replace the substring based on the parameter
+updated_strings = []
+for segment in segments:
+    if parameter in segment:
+        for replacement in replacement_list:
+            updated_string = segment.replace(segment[segment.find('{'): segment.find('}') + 1], replacement)
+            updated_strings.append(updated_string)
     else:
-        emp_statement = "*"
+        updated_strings.append(segment)
 
-    properties = "DIMENSION PROPERTIES MEMBER_NAME ON"
-    from_clause = f"FROM [{df_vdattr.loc['cube_name', 'Value']}]"
-    if df_where:
-        where_clause = f"WHERE ({','.join(df_where)})"
-    else:
-        where_clause = ""
-
-    mdx_queries = []
-
-    if multithreaded == 1 and num_strings:
-        for i in range(1, num_strings + 1):
-            df_temp = df.copy()  # Create a copy of the original DataFrame
-            dimension_string = f"[Dimension{i}]"
-            strings_list = split_list_and_create_strings(df_temp['MDX'], num_strings, dimension_string)
-            df_temp.loc[df_temp['order'] == i - 1, 'MDX'] = strings_list[i - 1]
-            
-            select_clause = f"SELECT {emp_statement} {''.join(df_temp['MDX'][1:])} {properties} ON 0, {emp_statement} {df_temp['MDX'][0]} {properties} ON 1"
-            
-            mdx_query = f"({select_clause}) {from_clause} {where_clause}"
-            mdx_queries.append(mdx_query)
-    else:
-        select_clause = f"SELECT {emp_statement} {''.join(df_table_dim[1:])} {properties} ON 0, {emp_statement} {df_table_dim[0]} {properties} ON 1"
-        mdx_query = f"({select_clause}) {from_clause} {where_clause}"
-        mdx_queries.append(mdx_query)
-
-    return mdx_queries if multithreaded == 1 else mdx_queries[0]
+print(updated_strings)
