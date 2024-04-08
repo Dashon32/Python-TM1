@@ -1,16 +1,23 @@
-segments = original_string.split('*')
+original_string = "{[A].[A].[B]}*{[C].[C].[D]}*{[E].[E].[F]}"
+parameter = "C"
+replacement_list = ["{[G].[G].[H]}", "{[I].[I].[J]}"]
+
+# Find the index of the segment containing the parameter
+param_index = original_string.find(parameter)
+
+# Find the start and end indices of the parameter segment
+start_index = original_string.rfind("{", 0, param_index)  # Find the last occurrence of "{" before param_index
+end_index = original_string.find("}", param_index) + 1  # Find the first occurrence of "}" after param_index
+
+# Extract the parameter segment
+param_segment = original_string[start_index:end_index]
 
 # Initialize list to store updated strings
 updated_strings = []
 
-# Iterate over segments and replace the substring based on the parameter
-for segment in segments:
-    if parameter in segment:
-        # Replace the parameter segment with each replacement from the list
-        for replacement in replacement_list:
-            updated_string = original_string.replace(segment, replacement)
-            updated_strings.append(updated_string)
-    else:
-        updated_strings.append(original_string)
+# Iterate over replacement list and replace the parameter segment
+for replacement in replacement_list:
+    updated_string = original_string.replace(param_segment, replacement)
+    updated_strings.append(updated_string)
 
 print(updated_strings)
