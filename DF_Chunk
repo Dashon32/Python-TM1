@@ -1,14 +1,16 @@
-# Split the original string based on '*'
 segments = original_string.split('*')
 
-# Iterate over segments and replace the substring based on the parameter
+# Initialize list to store updated strings
 updated_strings = []
+
+# Iterate over segments and replace the substring based on the parameter
 for segment in segments:
     if parameter in segment:
+        # Replace the parameter segment with each replacement from the list
         for replacement in replacement_list:
-            updated_string = segment.replace(segment[segment.find('{'): segment.find('}') + 1], replacement)
-            updated_strings.append('*'.join(segments[:segments.index(segment)] + [updated_string] + segments[segments.index(segment) + 1:]))
+            updated_string = original_string.replace(segment, replacement)
+            updated_strings.append(updated_string)
     else:
-        updated_strings.append(segment)
+        updated_strings.append(original_string)
 
 print(updated_strings)
