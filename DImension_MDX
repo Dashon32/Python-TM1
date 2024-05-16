@@ -1,5 +1,41 @@
-    if column_name in df.columns:
-        # Construct the new column name
-        new_column_name = f"level{number+1:03d}_Weight"
-        # Rename the column
-        df.rename(columns={column_name: new_column_name}, inplace=True)
+import pandas as pd
+from TM1py import MdxBuilder, MdxHierarchySet, MdxLevel
+
+# Sample DataFrame
+data = {
+    'index': ['001', '002', '003'],
+    'depth': [1, 2, 3],
+    'element': ['A', 'B', 'C'],
+    'leaves_only_flag': [True, False, True]
+}
+
+df = pd.DataFrame(data)
+
+# Set 'index' column as the index
+df.set_index('index', inplace=True)
+
+# Convert DataFrame to dictionary
+index_info = df.to_dict(orient='index')
+
+# Function to create MDX query
+def create_mdx_query(element, depth, leaves_only_flag):
+    hierarchy_set = MdxHierarchySet.member(f"[Dimension].[Hierarchy].[{element}]")
+    
+    if leaves_only_flag:
+        hierarchy_set = hierarchy_set.drilldown_level(level_name=MdxLevel(level_name=f"[Dimension].[Hierarchy].Level({depth})"))
+    else:
+        hierarchy_set = hierarchy_set.drilldown_level(level_index=depth)
+    
+    mdx = MdxBuilder.from_cube("[Cube]")
+    mdx.add_member_to_columns(hierarchy_set)
+    return mdx.to_mdx()
+
+# Create MDX queries for each index
+mdx_queries = {}
+for idx, info in index_info.items():
+    mdx_query = create_mdx_query(info['element'], info['depth'], info['leaves_only_flag'])
+    mdx_queries[idx] = mdx_query
+
+# Now you can use mdx_queries in your code
+for idx, query in mdx_queries.items():
+    print(f"Index {idx}:\n{query}\n")
